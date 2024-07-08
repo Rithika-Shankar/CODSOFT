@@ -1,0 +1,40 @@
+import java.util.Scanner;
+
+public class GradeCalci{
+    public static void main(String[] args) {
+
+    int Total = 0 ;
+    double averagePercentage;
+    char grade;
+    int numSubjects;
+
+    try (Scanner in = new Scanner(System.in)) {
+        System.out.print("Enter the number of subjects: ");
+        numSubjects = in.nextInt();
+        System.out.printf("Enter the student marks(Out of 100)in...%n");
+
+        for (int i = 1; i <= numSubjects; i++) {
+            System.out.printf("Subject %d:%n", i);
+            int marks = in.nextInt();
+            Total = Total + marks;
+        }
+    }
+
+    System.out.printf("Total Marks: %d/500%n", Total);
+    averagePercentage= (double)Total / numSubjects;
+    System.out.printf("Average Percentage: %.2f%n", averagePercentage);
+    
+        if (averagePercentage >= 90) {
+            grade = 'A';
+        } else if (averagePercentage >= 80) {
+            grade = 'B';
+        } else if (averagePercentage >= 70) {
+            grade = 'C';
+        } else if (averagePercentage >= 60) {
+            grade = 'D';
+        } else {
+            grade = 'F';
+        }
+        System.out.println("Grade: " + grade);
+    }
+}
