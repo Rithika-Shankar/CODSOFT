@@ -1,0 +1,58 @@
+import java.util.Scanner;
+
+public class Number {
+    public static void main(String[] args) {
+        try (Scanner in = new Scanner(System.in)) {
+            int lowerLimit = 1;
+            int upperLimit = 100;
+            int maxAttempts = 10;
+            int totalRounds = 0;
+            int totalAttempts = 0;
+
+            System.out.println("Welcome to the Number Guessing Game!");
+
+            while (true) {
+                int secretNumber = getRandomNumber(lowerLimit, upperLimit);
+                int attempts = 0;
+
+                System.out.println("I've chosen a number between " + lowerLimit + " and " + upperLimit + ". Try to guess it!");
+
+                while (attempts < maxAttempts) {
+                    System.out.print("Enter your guess: ");
+                    int userGuess = in.nextInt();
+                    attempts++;
+
+                    if (userGuess == secretNumber) {
+                        System.out.println("Congratulations! You guessed the number in " + attempts + " attempts.");
+                        totalAttempts += attempts;
+                        break;
+                    } else if (userGuess < secretNumber) {
+                        System.out.println("Too low! Try a higher number.");
+                    } else {
+                        System.out.println("Too high! Try a lower number.");
+                    }
+                }
+
+                totalRounds++;
+                System.out.print("Do you want to play another round? (yes/no): ");
+                String playAgain = in.next().toLowerCase();
+
+                if (!playAgain.equals("yes")) {
+                    break;
+                }
+            }
+            if(totalRounds == 1){
+            System.out.println("You completed " + totalRounds + " round.");
+            }else{
+            System.out.println("You completed " + totalRounds + " rounds.");
+            }
+            System.out.println("Total attempts: " + totalAttempts);
+            System.out.println("Your score is: " + (totalAttempts / (double) totalRounds));
+            System.out.println("Thank you for playing!");
+        }
+    }
+
+    private static int getRandomNumber(int min, int max) {
+        return min + (int) (Math.random() * (max - min + 1));
+    }
+}
