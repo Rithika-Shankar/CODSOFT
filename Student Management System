@@ -1,0 +1,223 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+
+class Student implements Serializable {
+    private String name;
+    private int rollNumber;
+    private double grade;
+
+    public Student(String name, int rollNumber, double grade) {
+        this.name = name;
+        this.rollNumber = rollNumber;
+        this.grade = grade;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getRollNumber() {
+        return rollNumber;
+    }
+
+    public double getGrade() {
+        return grade;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setGrade(double grade) {
+        this.grade = grade;
+    }
+
+    @Override
+    public String toString() {
+        return "Roll Number: " + rollNumber + ", Name: " + name + ", Grade: " + grade;
+    }
+}
+
+public class StudentManagementSystemSwing extends JFrame {
+    private static final String FILE_NAME = "students.dat";
+    private static ArrayList<Student> students = new ArrayList<>();
+    private JList<String> studentList;
+    private DefaultListModel<String> listModel;
+
+    public StudentManagementSystemSwing() {
+        setTitle("Student Management System");
+        setSize(500, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Create the list model and JList
+        listModel = new DefaultListModel<>();
+        studentList = new JList<>(listModel);
+        updateStudentList();
+
+        // Create buttons
+        JButton addButton = new JButton("Add Student");
+        addButton.addActionListener(e -> addStudent());
+
+        JButton editButton = new JButton("Edit Student");
+        editButton.addActionListener(e -> editStudent());
+
+        JButton removeButton = new JButton("Remove Student");
+        removeButton.addActionListener(e -> removeStudent());
+
+        JButton saveButton = new JButton("Save and Exit");
+        saveButton.addActionListener(e -> {
+            saveStudents();
+            System.exit(0);
+        });
+
+        // Layout
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.add(new JScrollPane(studentList), BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(addButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(removeButton);
+        buttonPanel.add(saveButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(panel);
+        setVisible(true);
+    }
+
+    private void addStudent() {
+        JTextField nameField = new JTextField();
+        JTextField rollNumberField = new JTextField();
+        JTextField gradeField = new JTextField();
+
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Name:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Roll Number:"));
+        panel.add(rollNumberField);
+        panel.add(new JLabel("Grade:"));
+        panel.add(gradeField);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Add Student", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                String name = nameField.getText().trim();
+                int rollNumber = Integer.parseInt(rollNumberField.getText().trim());
+                double grade = Double.parseDouble(gradeField.getText().trim());
+
+                if (findStudentByRollNumber(rollNumber) != null) {
+                    showMessage("Duplicate Roll Number", "A student with this roll number already exists.");
+                    return;
+                }
+
+                Student student = new Student(name, rollNumber, grade);
+                students.add(student);
+                updateStudentList();
+            } catch (NumberFormatException ex) {
+                showMessage("Invalid input", "Roll number and grade must be valid numbers.");
+            }
+        }
+    }
+
+    private void editStudent() {
+        String selectedValue = studentList.getSelectedValue();
+        if (selectedValue == null) {
+            showMessage("No Selection", "Please select a student to edit.");
+            return;
+        }
+
+        int rollNumber = extractRollNumber(selectedValue);
+        Student student = findStudentByRollNumber(rollNumber);
+
+        JTextField nameField = new JTextField(student.getName());
+        JTextField gradeField = new JTextField(Double.toString(student.getGrade()));
+
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Name:"));
+        panel.add(nameField);
+        panel.add(new JLabel("Grade:"));
+        panel.add(gradeField);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Edit Student", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                String name = nameField.getText().trim();
+                double grade = Double.parseDouble(gradeField.getText().trim());
+
+                student.setName(name);
+                student.setGrade(grade);
+                updateStudentList();
+            } catch (NumberFormatException ex) {
+                showMessage("Invalid input", "Grade must be a valid number.");
+            }
+        }
+    }
+
+    private void removeStudent() {
+        String selectedValue = studentList.getSelectedValue();
+        if (selectedValue == null) {
+            showMessage("No Selection", "Please select a student to remove.");
+            return;
+        }
+
+        int rollNumber = extractRollNumber(selectedValue);
+        Student student = findStudentByRollNumber(rollNumber);
+        students.remove(student);
+        updateStudentList();
+    }
+
+    private void updateStudentList() {
+        listModel.clear();
+        for (Student student : students) {
+            listModel.addElement(student.toString());
+        }
+    }
+
+    private static int extractRollNumber(String studentString) {
+        String[] parts = studentString.split(",");
+        String rollNumberPart = parts[0].trim();
+        return Integer.parseInt(rollNumberPart.split(":")[1].trim());
+    }
+
+    private static void loadStudents() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            students = (ArrayList<Student>) ois.readObject();
+        } catch (FileNotFoundException e) {
+            System.out.println("No previous student data found. Starting fresh.");
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading student data: " + e.getMessage());
+        }
+    }
+
+    private static void saveStudents() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(students);
+        } catch (IOException e) {
+            System.out.println("Error saving student data: " + e.getMessage());
+        }
+    }
+
+    private static Student findStudentByRollNumber(int rollNumber) {
+        for (Student student : students) {
+            if (student.getRollNumber() == rollNumber) {
+                return student;
+            }
+        }
+        return null;
+    }
+
+    private void showMessage(String title, String message) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public static void main(String[] args) {
+        loadStudents();
+        SwingUtilities.invokeLater(() -> new StudentManagementSystemSwing());
+    }
+}
